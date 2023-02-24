@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.helloworld.Models.Message;
+import com.example.helloworld.Models.Users;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -19,6 +21,11 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class Login extends AppCompatActivity {
     private static final String TAG = "Login";
@@ -27,6 +34,10 @@ public class Login extends AppCompatActivity {
     MaterialButton btn;
     private FirebaseAuth firebaseAuth;
     private FirebaseUser user;
+
+    private FirebaseDatabase database;
+    private DatabaseReference reference;
+
 
 
     @Override
@@ -68,10 +79,12 @@ public class Login extends AppCompatActivity {
                 pass.setError("Enter Password");
             }
             else{
+                btn.setEnabled(false);
                 firebaseAuth.signInWithEmailAndPassword(lEmail, lPassword)
                         .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
+                                btn.setEnabled(true);
                                 if (task.isSuccessful()){
                                     startActivity(new Intent(Login.this, MainActivity.class));
                                     overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
@@ -85,6 +98,7 @@ public class Login extends AppCompatActivity {
                         .addOnFailureListener(Login.this, new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
+                                btn.setEnabled(true);
                                 Log.i(TAG, "onFailure: "+ e);
                             }
                         });
@@ -92,5 +106,16 @@ public class Login extends AppCompatActivity {
 
         }
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        user = firebaseAuth.getCurrentUser();
+        if (user != null){
+            startActivity(new Intent(Login.this, MainActivity.class));
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            finish();
+        }
     }
 }

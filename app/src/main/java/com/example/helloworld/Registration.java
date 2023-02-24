@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.helloworld.Models.Users;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -92,6 +93,7 @@ public class Registration extends AppCompatActivity {
                  confirm.setError("Passwords do not match");
              }
              else {
+                 submitbtn.setEnabled(false);
                 firebaseAuth.createUserWithEmailAndPassword(lEmail, lpassword)
                         .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                             @Override
@@ -129,20 +131,20 @@ public class Registration extends AppCompatActivity {
             emaill.setError("Enter Email");
         }
         else if (TextUtils.isEmpty(phonenumber)){
-            phonenumbers.setError("Enter Phonenumber");
+            phonenumbers.setError("Enter Phone number");
         }
         else {
             databaseReference = firebaseDatabase.getReference().child("Users").child(firebaseAuth.getUid());
             Users users = new Users(fullname,lEmail,phonenumber);
             databaseReference.setValue(users);
-            //databaseReference.child("email").setValue(lEmail);
-            //databaseReference.child("userImage").setValue("");
             databaseReference.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    submitbtn.setEnabled(true);
                     if(snapshot.exists()){
                         startActivity(new Intent(Registration.this, MainActivity.class));
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finish();
                     }
                     else {
                         Toast.makeText(Registration.this,"User not Created",Toast.LENGTH_LONG).show();
@@ -151,7 +153,8 @@ public class Registration extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-
+                    submitbtn.setEnabled(true);
+                    Log.i(TAG, "onCancelled: " + error);
                 }
             });
 
