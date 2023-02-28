@@ -82,7 +82,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Phone Number"
                 android:textColor="@color/text_black_color"
-                android:inputType="textEmailAddress"
+                android:inputType="phone|number"
 
                 android:backgroundTint="@color/white"
                 />
