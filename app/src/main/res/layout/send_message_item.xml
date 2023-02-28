@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:padding="10dp"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true">
+
+        <LinearLayout
+            android:id="@+id/receivedMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/out_message_bubble"
+            android:orientation="vertical"
+            tools:ignore="UselessParent">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/txtSendMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:maxWidth="300dp"
+                android:text="Hello"
+                android:textColor="@color/purple_700" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_gravity="end"
+                android:id="@+id/txtSendTime"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="10:15"
+                android:textAlignment="textEnd"
+                android:textColor="@color/black"
+                android:textSize="10sp"
+                tools:ignore="SmallSp" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

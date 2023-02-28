@@ -1,4 +1,4 @@
-package com.example.helloworld;
+package com.example.helloworld.Models;
 
 public class Users {
     public String fullname;
