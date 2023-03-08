@@ -27,6 +27,7 @@ import com.example.helloworld.Models.Users;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -38,6 +39,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -52,7 +54,9 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference reference;
     private FirebaseAuth auth;
 
+
     private ArrayList<Message> messages = new ArrayList<>();
+    private ArrayList<String> words = new ArrayList<>();
     private MessageAdapter messageAdapter;
 
     private SharedPreferences sharedPreferences;
@@ -74,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("User", Context.MODE_PRIVATE);
 
         getMessages();
+        getWords();
 
         getMembers();
 
@@ -123,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
                                             members.setText(users1.fullname);
 
-                                            Log.i(TAG, "onDataChange: User info" + users1.email);
+                                           /* Log.i(TAG, "onDataChange: User info" + users1.email);*/
                                         }
                                         else {
                                             Toast.makeText(MainActivity.this,"User not Created",Toast.LENGTH_LONG).show();
@@ -139,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     else {
-                        Log.i(TAG, "onDataChange: Nothing");
+                        /*Log.i(TAG, "onDataChange: Nothing");*/
                     }
 
                 }
@@ -166,28 +171,69 @@ public class MainActivity extends AppCompatActivity {
         else{
             auth = FirebaseAuth.getInstance();
             if(auth.getCurrentUser() != null){
-                Message m = new Message(mess, date, ServerValue.TIMESTAMP, auth.getUid());
-                database = FirebaseDatabase.getInstance();
-                reference = database.getReference().child("Chats").push();
-                reference.setValue(m);
-                reference.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.exists()){
+                if (words.contains(mess)){
+                    SharedPreferences userInfo = getSharedPreferences("User", Context.MODE_PRIVATE);
+
+                    String fullname=userInfo.getString("fullname","");
+                    String lEmail=userInfo.getString("email","");
+                    String phonenumber=userInfo.getString("phonenumber","");
+
+                    reference = database.getReference().child("blacklist").child(auth.getUid());
+                    Users users = new Users(fullname,lEmail,phonenumber);
+                    reference.setValue(users);
+                    reference.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                            if(snapshot.exists()){
+                                auth.signOut();
+                                startActivity(new Intent(MainActivity.this, Login.class));
+                                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                                finish();
+                            }
+                            else {
+                                Toast.makeText(MainActivity.this,"Your Account has been Blacklisted",Toast.LENGTH_LONG).show();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                            Log.i(TAG, "onCancelled: " + error);
+                        }
+                    });
+
+
+
+
+
+
+                }
+                else {
+                    Message m = new Message(mess, date, ServerValue.TIMESTAMP, auth.getUid());
+                    database = FirebaseDatabase.getInstance();
+                    reference = database.getReference().child("Chats").push();
+                    reference.setValue(m);
+                    reference.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if(snapshot.exists()){
 //                            messages.add(m);
 //                            messageAdapter.addMessage(m, messages.size() - 1);
 //                            recyclerView.scrollToPosition(messages.size() - 1);
+                            }
+                            else {
+                                Toast.makeText(MainActivity.this,"Not sent",Toast.LENGTH_LONG).show();
+                            }
                         }
-                        else {
-                            Toast.makeText(MainActivity.this,"Not sent",Toast.LENGTH_LONG).show();
-                        }
-                    }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.i(TAG, "onCancelled: " + error);
-                    }
-                });
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Log.i(TAG, "onCancelled: " + error);
+                        }
+                    });
+                }
+
             }
             else{
                 startActivity(new Intent(MainActivity.this, Login.class));
@@ -210,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
                         messageAdapter.clearData();
                         for (DataSnapshot snap : snapshot.getChildren()){
                             Message message1 = new Message();
-                            Log.i(TAG, "onDataChange: " + snap);
+                           /* Log.i(TAG, "onDataChange: " + snap);*/
                             message1.setMessage(snap.child("message").getValue().toString());
                             message1.setTime(snap.child("time").getValue().toString());
                             message1.setUserId(snap.child("userId").getValue().toString());
@@ -220,9 +266,10 @@ public class MainActivity extends AppCompatActivity {
                         recyclerView.setLayoutManager(linearLayoutManager);
                         recyclerView.setAdapter(messageAdapter);
                         recyclerView.scrollToPosition(messages.size() - 1);
+                        message.setText("");
                     }
                     else {
-                        Log.i(TAG, "onDataChange: Nothing");
+                       /* Log.i(TAG, "onDataChange: Nothing");*/
                     }
 
                 }
@@ -254,5 +301,45 @@ public class MainActivity extends AppCompatActivity {
 
         bottomSheetDialog.show();
 
+    }
+    private void getWords() {
+        auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null){
+            database = FirebaseDatabase.getInstance();
+            reference = database.getReference().child("words");
+            reference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()){
+                        for (DataSnapshot snap : snapshot.getChildren()){
+                            String word = snap.getValue().toString();
+                            /*Log.i(TAG, "onDataChange: "+ userId);*/
+                            words.add(word);
+                            database = FirebaseDatabase.getInstance();
+                            reference = database.getReference().child("Chats").push();
+                        }
+                    }
+                    else {
+                        Log.i(TAG, "onDataChange: Nothing");
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.i(TAG, "onCancelled: " + error);
+                }
+            });
+        }
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if ( auth.getCurrentUser() != null){
+            startActivity(new Intent(MainActivity.this, Login.class));
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            finish();
+        }
     }
 }

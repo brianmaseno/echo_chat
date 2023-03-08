@@ -94,29 +94,59 @@ public class Registration extends AppCompatActivity {
              }
              else {
                  submitbtn.setEnabled(false);
-                firebaseAuth.createUserWithEmailAndPassword(lEmail, lpassword)
-                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()){
-                                    sendData();
+                 FirebaseUser user=FirebaseAuth.getInstance().getCurrentUser();
 
-                                }
-                                else {
-                                    Toast.makeText(Registration.this, "Registration Unsuccessful, Check network Connection", Toast.LENGTH_SHORT).show();
-                                }
-                                task.addOnFailureListener(Registration.this, new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.i(TAG, "onFailure: "+ e.getMessage());
-                                    }
-                                });
-                            }
+                 DatabaseReference checkreference = FirebaseDatabase.getInstance().getReference("blacklist");
+                 checkreference.orderByChild("email").equalTo(lEmail).addValueEventListener(new ValueEventListener() {
+                     @Override
+                     public void onDataChange(@NonNull DataSnapshot snapshot) {
+                         if (snapshot.exists()){
+                             submitbtn.setEnabled(true);
+                             Toast.makeText(Registration.this, "This email has been blacklisted", Toast.LENGTH_SHORT).show();
+                         }
+                         else {
+                             saveInfo(lEmail,lpassword);
+                         }
 
-                        });
+                     }
+
+                     @Override
+                     public void onCancelled(@NonNull DatabaseError error) {
+                         submitbtn.setEnabled(true);
+
+                     }
+                 });
+
+
             }
         }
 
+    }
+
+    private void saveInfo(String lEmail,String lpassword) {
+
+        firebaseAuth.createUserWithEmailAndPassword(lEmail, lpassword)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()){
+                            sendData();
+
+                        }
+                        else {
+                            submitbtn.setEnabled(true);
+                            Toast.makeText(Registration.this, "Registration Unsuccessful, Check network Connection", Toast.LENGTH_SHORT).show();
+                        }
+                        task.addOnFailureListener(Registration.this, new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                submitbtn.setEnabled(true);
+                                Log.i(TAG, "onFailure: "+ e.getMessage());
+                            }
+                        });
+                    }
+
+                });
     }
 
     private void sendData() {
